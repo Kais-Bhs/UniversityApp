@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Entities
 {
-    internal class Notification
+    public class Notification
     {
         public Guid Id { get; set; }
         public string Title { get; set; }
