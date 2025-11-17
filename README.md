@@ -88,20 +88,6 @@ https://localhost:[PORT]/swagger
 3.  Entrez le token au format `Bearer [votre_token]` (par exemple : `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`).
 4.  Vous pouvez maintenant tester les endpoints protégés (ceux avec l'icône de cadenas).
 
-## 🎥 Démonstration
-
-Vidéo de l'exécution : 
-
-[▶️ Voir la vidéo](Videos/ExecutionDemo.mp4)
-
-Video des apis de l'authentification et de admin : 
-
-[▶️ Voir la vidéo](Videos/Auth&AdminAPIS.mp4)
-
-Video des apis du teacher et de student : 
-[▶️ Voir la vidéo](Videos/Teacher&StudentAPIS.mp4)
-
-
 ## 🌐 Aperçu des Endpoints (Swagger)
 
 L'API utilise Swagger pour la documentation interactive.
@@ -150,6 +136,15 @@ Ces endpoints nécessitent le rôle **Student**.
 | `GET /api/student/grades` | Consultation des notes. |
 
 ![Endpoints Étudiant](https://private-us-east-1.manuscdn.com/sessionFile/gE5EZQphkU4VsC42mi4igy/sandbox/qGnB3ykjTSFLKILhNhRqsf-images_1763340892603_na1fn_L2hvbWUvdWJ1bnR1L1VuaXZlcnNpdHlBcHAvVW5pdmVyc2l0eUFwcC9kb2NzL2ltYWdlcy9zd2FnZ2VyX3N0dWRlbnQ.png?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvZ0U1RVpRcGhrVTRWc0M0Mm1pNGlneS9zYW5kYm94L3FHbkIzeWtqVFNGTEtJTGhOaFJxc2YtaW1hZ2VzXzE3NjMzNDA4OTI2MDNfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwxVnVhWFpsY25OcGRIbEJjSEF2Vlc1cGRtVnljMmwwZVVGd2NDOWtiMk56TDJsdFlXZGxjeTl6ZDJGbloyVnlYM04wZFdSbGJuUS5wbmciLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=gqNruB-011vXG6eCkHhh51MmQNveXx55EUxvc7-rTBgawQh03EawFjscBQJ52hZKlVZD6zjce1-sIN06RnrdZV8HpvpJuyq-9JfYoQ2MHjEk3tLLJWfsweFa9RtW9HXfeLS-D0ETC52cmL7Kou22cwDAUEGym0GVc15WEbigO~7SMkqXJtof-v2R9uj9xijXQod9GpWpWD0N0Qv5bF9n4mK6nvYYo5pI8N46Whdk6Q-5ETZNkXtXAzh3HFFqfQZbYnj-aJcHACsJQnQ9UgBloXz7xEk-wNAofYwUaWOAbNB4aUWNt0GcMpoBwvOvA6AJ4uXUXhl-EofHIS7VZOVhxw__)
+
+
+## 🎥 Démonstration
+
+Vidéo des APIs Authentification & Admin : 
+[▶️ Voir la vidéo](Videos/Auth&AdminAPIS.mp4)
+
+Vidéo des APIs Teacher & Student : 
+[▶️ Voir la vidéo](Videos/Teacher&StudentAPIS.mp4)
 
 ## 💡 Fonctionnalités Implémentées
 
