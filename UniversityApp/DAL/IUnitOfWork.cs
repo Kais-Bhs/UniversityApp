@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------------
+// ---------------------------------------------------------------
 // Copyright (c) Kais Bhh. All rights reserved.
 // Licensed under the MIT License.
 // See License.txt in the project root for license information.
@@ -9,22 +9,22 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using DAL.CustomRepositories;
 using Entities;
 
 namespace DAL
 {
     public interface IUnitOfWork
     {
-
-        IRepository<User> RepoUser { get; set; }
-        IRepository<Department> RepoDepartment { get; set; }
-        IRepository<Course> RepoCourse { get; set; }
-        IRepository<Class> RepoClass { get; set; }
-        IRepository<StudentClass> RepoStudentClass { get; set; }
-        IRepository<Attendance> RepoAttendance { get; set; }
-        IRepository<Assignment> RepoAssignment { get; set; }
-        IRepository<Submission> RepoSubmission { get; set; }
-        IRepository<Notification> RepoNotification { get; set; }
+        IUserRepository RepoUser { get; set; }
+        IDepartmentRepository RepoDepartment { get; set; }
+        ICourseRepository RepoCourse { get; set; }
+        IClassRepository RepoClass { get; set; }
+        IStudentClassRepository RepoStudentClass { get; set; }
+        IAttendanceRepository RepoAttendance { get; set; }
+        IAssignmentRepository RepoAssignment { get; set; }
+        ISubmissionRepository RepoSubmission { get; set; }
+        INotificationRepository RepoNotification { get; set; }
 
 
         /// <summary>

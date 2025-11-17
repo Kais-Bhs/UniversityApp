@@ -57,7 +57,7 @@ namespace DAL
         /// </summary>
         /// <param name="id">L'identifiant de l'entité à récupérer.</param>
         /// <returns>L'entité récupérée de manière asynchrone.</returns>
-        public virtual async Task<T> Get(int? id)
+        public virtual async Task<T> Get(Guid? id)
         {
             try
             {
