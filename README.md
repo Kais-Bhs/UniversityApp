@@ -89,7 +89,7 @@ https://localhost:[PORT]/swagger
 4.  Vous pouvez maintenant tester les endpoints protégés (ceux avec l'icône de cadenas).
 ## 🎥 Démonstration
 
-[▶️ Cliquez ici pour voir la vidéo de démonstration](Docs/Execution Demo.mp4)
+[▶️ Vous le trouverez dans le dossier Docs https://github.com/Kais-Bhs/UniversityApp/blob/main/Docs/Execution%20Demo.mp4.]
 
 ---
 ## 💡 Fonctionnalités Bonus Implémentées
@@ -98,7 +98,10 @@ Conformément aux exigences d'amélioration, les fonctionnalités suivantes ont 
 
 *   **Gestion d'Erreur Améliorée** : Implémentation d'un *middleware* global pour la gestion centralisée des exceptions et le retour de réponses JSON standardisées.
 *   **Logging (NLog)** : Intégration de NLog pour une journalisation complète des événements et des erreurs.
-*   **Soft Delete** : Implémenté pour les entités `User` et `Course` (via la propriété `IsActive` et les filtres de requête EF Core).
+*   **Notifications Email** : Envoi automatique d'emails aux étudiants lorsque :
+    *   Une soumission est notée (Grade Notification).
+    *   L'étudiant est assigné à une nouvelle classe (New Class Enrollment Notification).
+*   **API d'Upload de Fichiers (IFormFile)** : Ajout d'un endpoint pour la soumission de devoirs via upload de fichiers (`IFormFile`), avec validation du type et de la taille du fichier.
 *   **Caching en Mémoire** : Utilisation de `IMemoryCache` pour mettre en cache les listes de départements et de cours.
 *   **Pagination et Filtrage** : Déjà présent pour `Class` et `Assignment`, étendu pour inclure la récupération des utilisateurs (`User`).
 
