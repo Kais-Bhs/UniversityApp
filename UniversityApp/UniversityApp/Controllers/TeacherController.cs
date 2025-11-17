@@ -3,6 +3,7 @@
 // Licensed under the MIT License.
 // See License.txt in the project root for license information.
 // ---------------------------------------------------------------
+using System.Security.Claims;
 using BL.Managers;
 using DTOs.Assignment;
 using DTOs.Attendance;
@@ -13,7 +14,6 @@ using DTOs.Submission;
 using DTOs.User;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace UniversityApp.Controllers
 {

@@ -5,7 +5,6 @@
 // ---------------------------------------------------------------
 using DAO.DAO;
 using Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace DAL.CustomRepositories
 {
@@ -20,7 +19,7 @@ namespace DAL.CustomRepositories
             try
             {
                 IQueryable<Class> query;
-                
+
                 if (teacherId.HasValue)
                 {
                     query = await Query(c => c.TeacherId == teacherId.Value);

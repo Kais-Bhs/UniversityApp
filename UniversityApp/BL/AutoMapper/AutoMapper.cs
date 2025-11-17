@@ -4,16 +4,16 @@
 // See License.txt in the project root for license information.
 // ---------------------------------------------------------------
 using AutoMapper;
-using Entities;
-using DTOs.Auth;
-using DTOs.Department;
-using DTOs.Course;
-using DTOs.Class;
-using DTOs.Attendance;
 using DTOs.Assignment;
-using DTOs.Submission;
+using DTOs.Attendance;
+using DTOs.Auth;
+using DTOs.Class;
+using DTOs.Course;
+using DTOs.Department;
 using DTOs.Notification;
+using DTOs.Submission;
 using DTOs.User;
+using Entities;
 
 namespace BL.AutoMapper
 {

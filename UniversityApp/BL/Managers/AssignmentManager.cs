@@ -7,7 +7,6 @@ using AutoMapper;
 using DAL;
 using DTOs.Assignment;
 using DTOs.Common;
-using Entities;
 
 namespace BL.Managers
 {

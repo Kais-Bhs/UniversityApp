@@ -5,7 +5,6 @@
 // ---------------------------------------------------------------
 using DAO.DAO;
 using Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace DAL.CustomRepositories
 {

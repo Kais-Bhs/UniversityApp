@@ -3,8 +3,8 @@
 // Licensed under the MIT License.
 // See License.txt in the project root for license information.
 // ---------------------------------------------------------------
-using DTOs.Course;
 using DTOs.Common;
+using DTOs.Course;
 
 namespace BL.Managers
 {

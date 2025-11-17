@@ -5,8 +5,8 @@
 // ---------------------------------------------------------------
 using AutoMapper;
 using DAL;
-using DTOs.Course;
 using DTOs.Common;
+using DTOs.Course;
 using Entities;
 using Microsoft.Extensions.Caching.Memory;
 

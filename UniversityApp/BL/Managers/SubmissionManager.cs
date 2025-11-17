@@ -6,7 +6,6 @@
 using AutoMapper;
 using DAL;
 using DTOs.Submission;
-using Entities;
 
 namespace BL.Managers
 {

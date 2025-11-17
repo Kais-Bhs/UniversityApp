@@ -6,7 +6,6 @@
 using AutoMapper;
 using DAL;
 using DTOs.Notification;
-using Entities;
 
 namespace BL.Managers
 {

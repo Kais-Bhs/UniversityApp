@@ -3,19 +3,11 @@
 // Licensed under the MIT License.
 // See License.txt in the project root for license information.
 // ---------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
 using DAL.CustomRepositories;
 using DAO;
 using DAO.DAO;
 using Entities;
 using Microsoft.Extensions.DependencyInjection;
-using static System.Collections.Specialized.BitVector32;
 
 namespace DAL
 {
