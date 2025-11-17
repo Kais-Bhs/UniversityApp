@@ -10,6 +10,7 @@ namespace BL.Managers
     public interface ISubmissionManager
     {
         Task<SubmissionDto> SubmitAssignmentAsync(SubmitAssignmentDto submitAssignmentDto, Guid studentId);
+        Task<SubmissionDto> SubmitAssignmentWithFileAsync(SubmitAssignmentWithFileDto submitDto, Guid studentId);
         Task<SubmissionDto> GradeSubmissionAsync(Guid submissionId, GradeSubmissionDto gradeSubmissionDto, Guid teacherId);
         Task<List<SubmissionDto>> GetSubmissionsByAssignmentAsync(Guid assignmentId);
         Task<List<SubmissionDto>> GetStudentGradesAsync(Guid studentId);

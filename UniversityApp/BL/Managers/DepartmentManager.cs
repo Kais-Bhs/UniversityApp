@@ -8,6 +8,7 @@ using DAL;
 using DTOs.Department;
 using Entities;
 using Microsoft.Extensions.Caching.Memory;
+using NLog;
 
 namespace BL.Managers
 {
@@ -17,6 +18,7 @@ namespace BL.Managers
         private readonly IMapper _mapper;
         private readonly IMemoryCache _cache;
         private const string DepartmentsCacheKey = "AllDepartments";
+        private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public DepartmentManager(IUnitOfWork unitOfWork, IMapper mapper, IMemoryCache cache)
         {
@@ -27,108 +29,176 @@ namespace BL.Managers
 
         public async Task<List<DepartmentDto>> GetAllDepartmentsAsync()
         {
-            if (_cache.TryGetValue(DepartmentsCacheKey, out List<DepartmentDto> cachedDepartments))
+            try
             {
-                return cachedDepartments;
+                _logger.Info("Getting all departments");
+
+                if (_cache.TryGetValue(DepartmentsCacheKey, out List<DepartmentDto> cachedDepartments))
+                {
+                    _logger.Info("Retrieved {Count} departments from cache", cachedDepartments.Count);
+                    return cachedDepartments;
+                }
+
+                var departments = await _unitOfWork.RepoDepartment.GetAllDepartmentsWithHeadAsync();
+
+                var departmentDtos = _mapper.Map<List<DepartmentDto>>(departments);
+
+                _cache.Set(DepartmentsCacheKey, departmentDtos, TimeSpan.FromHours(1));
+
+                _logger.Info("Retrieved {Count} departments from database", departmentDtos.Count);
+
+                return departmentDtos;
             }
-
-            var departments = await _unitOfWork.RepoDepartment.GetAllDepartmentsWithHeadAsync();
-
-            var departmentDtos = _mapper.Map<List<DepartmentDto>>(departments);
-
-            _cache.Set(DepartmentsCacheKey, departmentDtos, TimeSpan.FromHours(1));
-
-            return departmentDtos;
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting all departments");
+                throw;
+            }
         }
 
         public async Task<DepartmentDto> GetDepartmentByIdAsync(Guid id)
         {
-            var department = await _unitOfWork.RepoDepartment.GetDepartmentByIdWithHeadAsync(id);
-
-            if (department == null)
+            try
             {
-                throw new KeyNotFoundException($"Department with ID {id} not found");
-            }
+                _logger.Info("Getting department {DepartmentId}", id);
 
-            return _mapper.Map<DepartmentDto>(department);
+                var department = await _unitOfWork.RepoDepartment.GetDepartmentByIdWithHeadAsync(id);
+
+                if (department == null)
+                {
+                    _logger.Warn("Department {DepartmentId} not found", id);
+                    throw new KeyNotFoundException($"Department with ID {id} not found");
+                }
+
+                _logger.Info("Department {DepartmentId} retrieved successfully", id);
+
+                return _mapper.Map<DepartmentDto>(department);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting department {DepartmentId}", id);
+                throw;
+            }
         }
 
         public async Task<DepartmentDto> CreateDepartmentAsync(CreateDepartmentDto createDepartmentDto)
         {
-            var nameExists = await _unitOfWork.RepoDepartment.CheckDepartmentNameExistsAsync(createDepartmentDto.Name);
-
-            if (nameExists)
+            try
             {
-                throw new InvalidOperationException("Department name must be unique");
+                _logger.Info("Creating department with name {Name}", createDepartmentDto.Name);
+
+                var nameExists = await _unitOfWork.RepoDepartment.CheckDepartmentNameExistsAsync(createDepartmentDto.Name);
+
+                if (nameExists)
+                {
+                    _logger.Warn("Department name {Name} already exists", createDepartmentDto.Name);
+                    throw new InvalidOperationException("Department name must be unique");
+                }
+
+                var headOfDepartment = await _unitOfWork.RepoUser.GetTeacherByIdAsync(createDepartmentDto.HeadOfDepartmentId);
+
+                if (headOfDepartment == null)
+                {
+                    _logger.Warn("Head of department {HeadId} not found or not a teacher", createDepartmentDto.HeadOfDepartmentId);
+                    throw new InvalidOperationException("Head of Department must be a teacher");
+                }
+
+                var department = _mapper.Map<Department>(createDepartmentDto);
+                department.Id = Guid.NewGuid();
+
+                await _unitOfWork.RepoDepartment.Add(department);
+                await _unitOfWork.SaveAsync();
+
+                _cache.Remove(DepartmentsCacheKey);
+
+                _logger.Info("Department {DepartmentId} created successfully", department.Id);
+
+                return await GetDepartmentByIdAsync(department.Id);
             }
-
-            var headOfDepartment = await _unitOfWork.RepoUser.GetTeacherByIdAsync(createDepartmentDto.HeadOfDepartmentId);
-
-            if (headOfDepartment == null)
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("Head of Department must be a teacher");
+                _logger.Error(ex, "Error creating department with name {Name}", createDepartmentDto.Name);
+                throw;
             }
-
-            var department = _mapper.Map<Department>(createDepartmentDto);
-            department.Id = Guid.NewGuid();
-
-            await _unitOfWork.RepoDepartment.Add(department);
-            await _unitOfWork.SaveAsync();
-
-            _cache.Remove(DepartmentsCacheKey);
-
-            return await GetDepartmentByIdAsync(department.Id);
         }
 
         public async Task<DepartmentDto> UpdateDepartmentAsync(Guid id, UpdateDepartmentDto updateDepartmentDto)
         {
-            var department = await _unitOfWork.RepoDepartment.GetDepartmentByIdWithHeadAsync(id);
-
-            if (department == null)
+            try
             {
-                throw new KeyNotFoundException($"Department with ID {id} not found");
+                _logger.Info("Updating department {DepartmentId}", id);
+
+                var department = await _unitOfWork.RepoDepartment.GetDepartmentByIdWithHeadAsync(id);
+
+                if (department == null)
+                {
+                    _logger.Warn("Department {DepartmentId} not found", id);
+                    throw new KeyNotFoundException($"Department with ID {id} not found");
+                }
+
+                var nameExists = await _unitOfWork.RepoDepartment.CheckDepartmentNameExistsAsync(updateDepartmentDto.Name, id);
+
+                if (nameExists)
+                {
+                    _logger.Warn("Department name {Name} already exists", updateDepartmentDto.Name);
+                    throw new InvalidOperationException("Department name must be unique");
+                }
+
+                var headOfDepartment = await _unitOfWork.RepoUser.GetTeacherByIdAsync(updateDepartmentDto.HeadOfDepartmentId);
+
+                if (headOfDepartment == null)
+                {
+                    _logger.Warn("Head of department {HeadId} not found or not a teacher", updateDepartmentDto.HeadOfDepartmentId);
+                    throw new InvalidOperationException("Head of Department must be a teacher");
+                }
+
+                _mapper.Map(updateDepartmentDto, department);
+                department.UpdatedDate = DateTimeOffset.UtcNow;
+
+                await _unitOfWork.RepoDepartment.Update(department);
+                await _unitOfWork.SaveAsync();
+
+                _cache.Remove(DepartmentsCacheKey);
+
+                _logger.Info("Department {DepartmentId} updated successfully", id);
+
+                return await GetDepartmentByIdAsync(id);
             }
-
-            var nameExists = await _unitOfWork.RepoDepartment.CheckDepartmentNameExistsAsync(updateDepartmentDto.Name, id);
-
-            if (nameExists)
+            catch (Exception ex)
             {
-                throw new InvalidOperationException("Department name must be unique");
+                _logger.Error(ex, "Error updating department {DepartmentId}", id);
+                throw;
             }
-
-            var headOfDepartment = await _unitOfWork.RepoUser.GetTeacherByIdAsync(updateDepartmentDto.HeadOfDepartmentId);
-
-            if (headOfDepartment == null)
-            {
-                throw new InvalidOperationException("Head of Department must be a teacher");
-            }
-
-            _mapper.Map(updateDepartmentDto, department);
-            department.UpdatedDate = DateTimeOffset.UtcNow;
-
-            await _unitOfWork.RepoDepartment.Update(department);
-            await _unitOfWork.SaveAsync();
-
-            _cache.Remove(DepartmentsCacheKey);
-
-            return await GetDepartmentByIdAsync(id);
         }
 
         public async Task<bool> DeleteDepartmentAsync(Guid id)
         {
-            var department = await _unitOfWork.RepoDepartment.GetDepartmentByIdWithHeadAsync(id);
-
-            if (department == null)
+            try
             {
-                throw new KeyNotFoundException($"Department with ID {id} not found");
+                _logger.Info("Deleting department {DepartmentId}", id);
+
+                var department = await _unitOfWork.RepoDepartment.GetDepartmentByIdWithHeadAsync(id);
+
+                if (department == null)
+                {
+                    _logger.Warn("Department {DepartmentId} not found", id);
+                    throw new KeyNotFoundException($"Department with ID {id} not found");
+                }
+
+                await _unitOfWork.RepoDepartment.Delete(department);
+                await _unitOfWork.SaveAsync();
+
+                _cache.Remove(DepartmentsCacheKey);
+
+                _logger.Info("Department {DepartmentId} deleted successfully", id);
+
+                return true;
             }
-
-            await _unitOfWork.RepoDepartment.Delete(department);
-            await _unitOfWork.SaveAsync();
-
-            _cache.Remove(DepartmentsCacheKey);
-
-            return true;
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error deleting department {DepartmentId}", id);
+                throw;
+            }
         }
     }
 }

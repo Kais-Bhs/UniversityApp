@@ -152,7 +152,70 @@ namespace UniversityApp.Controllers
                 return StatusCode(500, ApiResponse<SubmissionDto>.ErrorResponse("An error occurred", new List<string> { ex.Message }));
             }
         }
+        [HttpPost("assignments/{id}/submit-with-file")]
+        public async Task<ActionResult<ApiResponse<SubmissionDto>>> SubmitAssignmentWithFile(Guid id, [FromForm] SubmitAssignmentWithFileDto submitDto)
+        {
+            try
+            {
+                submitDto.AssignmentId = id;
+                var studentId = GetCurrentUserId();
+                var submission = await _submissionManager.SubmitAssignmentWithFileAsync(submitDto, studentId);
+                return Ok(ApiResponse<SubmissionDto>.SuccessResponse(submission, "Assignment submitted successfully with file"));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ApiResponse<SubmissionDto>.ErrorResponse(ex.Message));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ApiResponse<SubmissionDto>.ErrorResponse(ex.Message));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ApiResponse<SubmissionDto>.ErrorResponse(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<SubmissionDto>.ErrorResponse("An error occurred", new List<string> { ex.Message }));
+            }
+        }
 
+        [HttpGet("submissions/{submissionId}/download")]
+        public async Task<IActionResult> DownloadSubmissionFile(Guid submissionId)
+        {
+            try
+            {
+                var studentId = GetCurrentUserId();
+                var submissions = await _submissionManager.GetStudentGradesAsync(studentId);
+                var submission = submissions.FirstOrDefault(s => s.Id == submissionId);
+
+                if (submission == null)
+                {
+                    return NotFound(ApiResponse<object>.ErrorResponse("Submission not found or you don't have access"));
+                }
+
+                if (string.IsNullOrEmpty(submission.FileUrl))
+                {
+                    return NotFound(ApiResponse<object>.ErrorResponse("No file associated with this submission"));
+                }
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads", submission.FileUrl.Replace("/", "\\"));
+
+                if (!System.IO.File.Exists(filePath))
+                {
+                    return NotFound(ApiResponse<object>.ErrorResponse("File not found on server"));
+                }
+
+                var fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
+                var fileName = Path.GetFileName(filePath);
+
+                return File(fileBytes, "application/octet-stream", fileName);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.ErrorResponse("An error occurred", new List<string> { ex.Message }));
+            }
+        }
         #endregion
 
         #region Grades

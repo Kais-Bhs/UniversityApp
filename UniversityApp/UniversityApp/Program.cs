@@ -7,10 +7,12 @@ using System.Text;
 using BL.AutoMapper;
 using BL.Configuration;
 using BL.Managers;
+using BL.Services;
 using DAL;
 using DAO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NLog;
@@ -50,6 +52,8 @@ try
     builder.Services.AddScoped<IAssignmentManager, AssignmentManager>();
     builder.Services.AddScoped<ISubmissionManager, SubmissionManager>();
     builder.Services.AddScoped<INotificationManager, NotificationManager>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
+    builder.Services.AddScoped<IFileStorageService, FileStorageService>();
 
     builder.Services.AddCors(options =>
     {
@@ -143,6 +147,13 @@ try
     }
 
     app.UseHttpsRedirection();
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+        RequestPath = "/uploads"
+    });
 
     app.UseAuthentication();
     app.UseAuthorization();

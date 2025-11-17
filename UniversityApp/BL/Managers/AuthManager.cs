@@ -14,6 +14,7 @@ using DTOs.Auth;
 using Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using NLog;
 
 namespace BL.Managers
 {
@@ -22,6 +23,7 @@ namespace BL.Managers
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly JWTConfiguration _jwtConfig;
+        private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
         public AuthManager(IUnitOfWork unitOfWork, IMapper mapper, IOptions<JWTConfiguration> jwtConfig)
         {
@@ -32,135 +34,221 @@ namespace BL.Managers
 
         public async Task<TokenDto> RegisterAsync(RegisterDto registerDto)
         {
-            var existingUser = await _unitOfWork.RepoUser.GetUserByEmailAsync(registerDto.Email);
-
-            if (existingUser != null)
+            try
             {
-                throw new InvalidOperationException("User with this email already exists");
+                _logger.Info("Registering new user with email {Email}", registerDto.Email);
+
+                var existingUser = await _unitOfWork.RepoUser.GetUserByEmailAsync(registerDto.Email);
+
+                if (existingUser != null)
+                {
+                    _logger.Warn("Registration failed: User with email {Email} already exists", registerDto.Email);
+                    throw new InvalidOperationException("User with this email already exists");
+                }
+
+                var user = _mapper.Map<User>(registerDto);
+                user.Id = Guid.NewGuid();
+                user.Password = HashPassword(registerDto.Password);
+
+                await _unitOfWork.RepoUser.Add(user);
+                await _unitOfWork.SaveAsync();
+
+                _logger.Info("User {UserId} registered successfully with email {Email}", user.Id, registerDto.Email);
+
+                return GenerateToken(user);
             }
-
-            var user = _mapper.Map<User>(registerDto);
-            user.Id = Guid.NewGuid();
-            user.Password = HashPassword(registerDto.Password);
-
-            await _unitOfWork.RepoUser.Add(user);
-            await _unitOfWork.SaveAsync();
-
-            return GenerateToken(user);
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error registering user with email {Email}", registerDto.Email);
+                throw;
+            }
         }
 
         public async Task<TokenDto> LoginAsync(LoginDto loginDto)
         {
-            var user = await _unitOfWork.RepoUser.GetUserByEmailAsync(loginDto.Email);
-
-            if (user == null || !VerifyPassword(loginDto.Password, user.Password))
+            try
             {
-                throw new UnauthorizedAccessException("Invalid email or password");
+                _logger.Info("Login attempt for email {Email}", loginDto.Email);
+
+                var user = await _unitOfWork.RepoUser.GetUserByEmailAsync(loginDto.Email);
+
+                if (user == null || !VerifyPassword(loginDto.Password, user.Password))
+                {
+                    _logger.Warn("Login failed for email {Email}: Invalid credentials", loginDto.Email);
+                    throw new UnauthorizedAccessException("Invalid email or password");
+                }
+
+                _logger.Info("User {UserId} logged in successfully", user.Id);
+
+                return GenerateToken(user);
             }
-            return GenerateToken(user);
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error during login for email {Email}", loginDto.Email);
+                throw;
+            }
         }
 
         public async Task<TokenDto> RefreshTokenAsync(RefreshTokenDto refreshTokenDto)
         {
-            var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
-            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userId))
+            try
             {
-                throw new UnauthorizedAccessException("Invalid token");
+                _logger.Info("Refreshing token");
+
+                var principal = GetPrincipalFromExpiredToken(refreshTokenDto.Token);
+                var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.Warn("Token refresh failed: Invalid token");
+                    throw new UnauthorizedAccessException("Invalid token");
+                }
+
+                var user = await _unitOfWork.RepoUser.GetUserByIdAsync(Guid.Parse(userId));
+
+                if (user == null)
+                {
+                    _logger.Warn("Token refresh failed: User {UserId} not found", userId);
+                    throw new UnauthorizedAccessException("User not found");
+                }
+
+                _logger.Info("Token refreshed successfully for user {UserId}", user.Id);
+
+                return GenerateToken(user);
             }
-
-            var user = await _unitOfWork.RepoUser.GetUserByIdAsync(Guid.Parse(userId));
-
-            if (user == null)
+            catch (Exception ex)
             {
-                throw new UnauthorizedAccessException("User not found");
+                _logger.Error(ex, "Error refreshing token");
+                throw;
             }
-
-            return GenerateToken(user);
         }
 
         private TokenDto GenerateToken(User user)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_jwtConfig.SecretKey);
-
-            var claims = new List<Claim>
+            try
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
+                _logger.Debug("Generating token for user {UserId}", user.Id);
 
-            var tokenDescriptor = new SecurityTokenDescriptor
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var key = Encoding.UTF8.GetBytes(_jwtConfig.SecretKey);
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Name),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, user.Role)
+                };
+
+                var tokenDescriptor = new SecurityTokenDescriptor
+                {
+                    Subject = new ClaimsIdentity(claims),
+                    Expires = DateTime.UtcNow.AddMinutes(_jwtConfig.TokenValidityInMinutes),
+                    Issuer = _jwtConfig.ValidIssuer,
+                    Audience = _jwtConfig.ValidAudience,
+                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+                };
+
+                var token = tokenHandler.CreateToken(tokenDescriptor);
+                var tokenString = tokenHandler.WriteToken(token);
+
+                _logger.Debug("Token generated successfully for user {UserId}", user.Id);
+
+                return new TokenDto
+                {
+                    Token = tokenString,
+                    RefreshToken = GenerateRefreshToken(),
+                    ExpiresAt = tokenDescriptor.Expires.Value,
+                    Role = user.Role,
+                    UserId = user.Id.ToString(),
+                    Name = user.Name,
+                    Email = user.Email
+                };
+            }
+            catch (Exception ex)
             {
-                Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(_jwtConfig.TokenValidityInMinutes),
-                Issuer = _jwtConfig.ValidIssuer,
-                Audience = _jwtConfig.ValidAudience,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            return new TokenDto
-            {
-                Token = tokenString,
-                RefreshToken = GenerateRefreshToken(),
-                ExpiresAt = tokenDescriptor.Expires.Value,
-                Role = user.Role,
-                UserId = user.Id.ToString(),
-                Name = user.Name,
-                Email = user.Email
-            };
+                _logger.Error(ex, "Error generating token for user {UserId}", user.Id);
+                throw;
+            }
         }
 
         private string GenerateRefreshToken()
         {
-            var randomNumber = new byte[32];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
+            try
+            {
+                var randomNumber = new byte[32];
+                using var rng = RandomNumberGenerator.Create();
+                rng.GetBytes(randomNumber);
+                return Convert.ToBase64String(randomNumber);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error generating refresh token");
+                throw;
+            }
         }
 
         private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
         {
-            var tokenValidationParameters = new TokenValidationParameters
+            try
             {
-                ValidateAudience = true,
-                ValidAudience = _jwtConfig.ValidAudience,
-                ValidateIssuer = true,
-                ValidIssuer = _jwtConfig.ValidIssuer,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.SecretKey)),
-                ValidateLifetime = false
-            };
+                var tokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = true,
+                    ValidAudience = _jwtConfig.ValidAudience,
+                    ValidateIssuer = true,
+                    ValidIssuer = _jwtConfig.ValidIssuer,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.SecretKey)),
+                    ValidateLifetime = false
+                };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
 
-            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-                !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new SecurityTokenException("Invalid token");
+                if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                    !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    _logger.Warn("Invalid token algorithm");
+                    throw new SecurityTokenException("Invalid token");
+                }
+
+                return principal;
             }
-
-            return principal;
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error validating expired token");
+                throw;
+            }
         }
 
         private string HashPassword(string password)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            try
+            {
+                using var sha256 = SHA256.Create();
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error hashing password");
+                throw;
+            }
         }
 
         private bool VerifyPassword(string password, string hashedPassword)
         {
-            var hashOfInput = HashPassword(password);
-            return hashOfInput == hashedPassword;
+            try
+            {
+                var hashOfInput = HashPassword(password);
+                return hashOfInput == hashedPassword;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error verifying password");
+                throw;
+            }
         }
     }
 }
