@@ -89,7 +89,7 @@ https://localhost:[PORT]/swagger
 4.  Vous pouvez maintenant tester les endpoints protégés (ceux avec l'icône de cadenas).
 ## 🎥 Démonstration
 
-[▶️ Cliquez ici pour voir la vidéo de démonstration](Docs/Execution Demo.mp4)
+[▶️ Vous le trouverez dans le dossier Docs https://github.com/Kais-Bhs/UniversityApp/blob/main/Docs/Execution%20Demo.mp4.]
 
 ---
 ## 💡 Fonctionnalités Bonus Implémentées
