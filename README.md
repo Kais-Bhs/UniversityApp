@@ -92,16 +92,14 @@ https://localhost:[PORT]/swagger
 
 Vidéo de l'exécution : 
 
-[▶️ Voir la vidéo](Videos/ExecutionDemo.mp4)]
+[▶️ Voir la vidéo](Videos/ExecutionDemo.mp4)
 
 Video des apis de l'authentification et de admin : 
 
-[▶️ Voir la vidéo](Videos/Auth&AdminAPIS.mp4)]
+[▶️ Voir la vidéo](Videos/Auth&AdminAPIS.mp4)
 
 Video des apis du teacher et de student : 
-[▶️ Voir la vidéo](Videos/Teacher&StudentAPIS.mp4)]
-
----
+[▶️ Voir la vidéo](Videos/Teacher&StudentAPIS.mp4)
 
 
 ## 🌐 Aperçu des Endpoints (Swagger)
