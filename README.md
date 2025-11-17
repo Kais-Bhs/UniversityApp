@@ -87,9 +87,12 @@ https://localhost:[PORT]/swagger
 2.  Cliquez sur le bouton **Authorize** en haut à droite de l'interface Swagger.
 3.  Entrez le token au format `Bearer [votre_token]` (par exemple : `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`).
 4.  Vous pouvez maintenant tester les endpoints protégés (ceux avec l'icône de cadenas).
+
 ## 🎥 Démonstration
 
-[▶️ Vous le trouverez dans le dossier Docs https://github.com/Kais-Bhs/UniversityApp/blob/main/Docs/Execution%20Demo.mp4.]
+<video src="Docs/Execution Demo.mp4" controls title="Démonstration de l'application UniversityApp" style="max-width: 100%;">
+    Votre navigateur ne supporte pas la balise vidéo.
+</video>
 
 ---
 ## 💡 Fonctionnalités Bonus Implémentées
