@@ -13,7 +13,6 @@ Ce projet utilise une architecture modulaire et suit les principes de la Sépara
 *   **Authentification** : JWT (JSON Web Tokens)
 *   **Logging** : NLog
 *   **Mapping** : AutoMapper
-*   **Validation** : FluentValidation (si implémenté, à vérifier)
 ## 🏗 Architecture du Projet
 
 Le projet est structuré en plusieurs couches logiques, chacune ayant une responsabilité unique et bien définie. Cette approche, inspirée de l'Architecture en Couches (Layered Architecture), facilite le développement et les tests unitaires.
