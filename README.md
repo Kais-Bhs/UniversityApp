@@ -87,7 +87,7 @@ https://localhost:[PORT]/swagger
 2.  Cliquez sur le bouton **Authorize** en haut à droite de l'interface Swagger.
 3.  Entrez le token au format `Bearer [votre_token]` (par exemple : `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`).
 4.  Vous pouvez maintenant tester les endpoints protégés (ceux avec l'icône de cadenas).
-
+(Docs/Execution Demo.mp4)
 ---
 ## 💡 Fonctionnalités Bonus Implémentées
 
