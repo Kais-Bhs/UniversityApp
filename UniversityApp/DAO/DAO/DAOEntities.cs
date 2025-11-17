@@ -3,12 +3,7 @@
 // Licensed under the MIT License.
 // See License.txt in the project root for license information.
 // ---------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAO.DAO
@@ -70,7 +65,7 @@ namespace DAO.DAO
         /// <param name="id">L'identifiant de l'entité à récupérer.</param>
         /// <returns>L'entité récupérée de manière asynchrone ou null si aucune entité ne correspond.</returns>
 
-        public virtual async Task<T> Get(int? id)
+        public virtual async Task<T> Get(Guid? id)
         {
             try
             {

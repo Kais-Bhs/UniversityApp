@@ -3,12 +3,7 @@
 // Licensed under the MIT License.
 // See License.txt in the project root for license information.
 // ---------------------------------------------------------------
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAO.DAO
 {
@@ -32,7 +27,7 @@ namespace DAO.DAO
         /// </summary>
         /// <param name="id">The ID of the entity to retrieve.</param>
         /// <returns>The entity with the provided ID, or null if not found.</returns>
-        Task<T> Get(int? id);
+        Task<T> Get(Guid? id);
 
         /// <summary>
         /// Retrieves a collection of all entities asynchronously.
